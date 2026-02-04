@@ -20,13 +20,25 @@ CREATE TABLE orders
     (
     order_id INT PRIMARY KEY,
     customer_id INT,--This is coming from the cx table
-    restaurant_id,--This is comiing from the restaurant table
+    restaurant_id INT,--This is comiing from the restaurant table
     order_item VARCHAR(55),
     order_date DATE,
     order_time TIME,
     order_status VARCHAR(55),
     total_amount FLOAT
     );
+
+-- adding FK CONSTRAINT
+ALTER TABLE orders
+ADD CONSTRAINT fk_customers
+FOREIGN KEY (customer_id)
+REFERENCES customers(customer_id);
+
+-- adding FK CONSTRAINT
+ALTER TABLE orders
+ADD CONSTRAINT fk_restaurants
+FOREIGN KEY (restaurant_id)
+REFERENCES restaurants(restaurant_id);
 
 CREATE TABLE riders
     (
@@ -35,11 +47,15 @@ CREATE TABLE riders
     sign_up DATE      
     );
 
+DROP TABLE IF EXISTS deliveries;
 CREATE TABLE deliveries
     (
     delivery_id INT PRIMARY KEY,
     order_id INT, --this is coming orders table
     delivery_status VARCHAR(35),
     delivery_time TIME,
-    rider_id INT --this is coming from riders table
-    )
+    rider_id INT, --this is coming from riders table
+    CONSTRAINT fk_orders FOREIGN KEY(order_id) REFERENCES orders(order_id),
+    CONSTRAINT fk_riders FOREIGN KEY(rider_id) REFERENCES riders(rider_id)
+    );
+ 
