@@ -1,6 +1,14 @@
 -- Active: 1770222622769@@127.0.0.1@5433@zomato
 -- Zomato Data Analysis using SQL
 
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS restaurants;
+DROP TABLE IF EXISTS riders;
+DROP TABLE IF EXISTS deliveries;
+
+
+
 CREATE TABLE customers
     (
     customer_id INT PRIMARY KEY,
@@ -47,7 +55,7 @@ CREATE TABLE riders
     sign_up DATE      
     );
 
-DROP TABLE IF EXISTS deliveries;
+
 CREATE TABLE deliveries
     (
     delivery_id INT PRIMARY KEY,
@@ -59,3 +67,7 @@ CREATE TABLE deliveries
     CONSTRAINT fk_riders FOREIGN KEY(rider_id) REFERENCES riders(rider_id)
     );
  
+
+-- END OF SCHEMAS
+
+
