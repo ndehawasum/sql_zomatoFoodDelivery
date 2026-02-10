@@ -60,30 +60,74 @@ WHERE
 -- filter 'arjun mehta'
 -- group by customers_id, dishes, count of the customer
 
-SSELECT 
-    c.customer_id,
-    c.customer_name,
-    o.order_item as dishes,
-    COUNT(*) as total_orders
-FROM orders as o
-JOIN
-customers as c
-ON c.customer_id = o.customer_id
-WHERE 
-    o.order_date >= DATE '2025-01-25' - INTERVAL '1 Year'
-GROUP BY 1, 2, 3
-
-
-
+SELECT 
+    customer_name,
+    dishes,
+    total_orders
+FROM
+    (SELECT
+        c.customer_id,
+        c.customer_name,
+        o.order_item as dishes,
+        COUNT(*) as total_orders,
+        DENSE_RANK() OVER(ORDER BY COUNT(*) DESC) as rank
+    FROM orders as o
+    JOIN
+    customers as c
+    ON c.customer_id = o.customer_id
+    WHERE 
+        o.order_date >= DATE '2025-01-25' - INTERVAL '2 Year'
+        AND
+        c.customer_name = 'Arjun Mehta'
+    GROUP BY 1, 2, 3
+    ORDER BY 1, 4 DESC )as t1
+WHERE rank <= 5
 
 -- Q2. Popular Time Slots 
 -- Question:  Identify the time slots during which the most orders are placed, based on 2-hour intervals. 
 
+-- Approach 1
+SELECT 
+    CASE 
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 0 AND 1 THEN  '00:00 - 2:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 2 AND 3 THEN  '02:00- 04:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 4 AND 5 THEN  '04:00- 06:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 6 AND 7 THEN  '06:00- 08:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 8 AND 9 THEN  '08:00- 10:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 10 AND 11 THEN  '10:00- 12:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 12 AND 13 THEN  '12:00- 14:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 14 AND 15 THEN  '14:00- 16:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 16 AND 17 THEN  '16:00- 18:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 18 AND 19 THEN  '18:00- 20:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 20 AND 21 THEN  '20:00- 22:00'
+        WHEN EXTRACT(HOUR FROM order_time) BETWEEN 22 AND 23 THEN  '22:00- 00:00'
+    END AS time_slot,
+    COUNT (order_id) AS order_count
+FROM orders
+GROUP BY time_slot
+ORDER BY order_count DESC;
+
+-- Approach 2
+SELECT 
+    FLOOR(EXTRACT(HOUR FROM order_time)/2)*2 AS start_time,
+    FLOOR(EXTRACT(HOUR FROM order_time)/2)*2+2 AS end_time,
+    COUNT(*) AS total_orders
+FROM orders
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+
 -- Q3. Order Value Analysis 
--- Question: Find the average order value (AOV) per customer who has placed more than 750 orders. Return: customer_name, aov (average order value). 
+-- Question: Find the average order value (AOV) per customer who has placed more than 750 orders. 
+-- Return: customer_name, aov (average order value). 
+
+
+
+   
+
 
 -- Q4. High-Value Customers 
--- Question: List the customers who have spent more than 100K in total on food orders. Return: customer_name, customer_id. 
+-- Question: List the customers who have spent more than 100K in total on food orders. 
+--Return: customer_name, customer_id. 
 
 
 -- Q5. Orders Without Delivery 
