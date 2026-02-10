@@ -119,20 +119,59 @@ ORDER BY 3 DESC;
 -- Q3. Order Value Analysis 
 -- Question: Find the average order value (AOV) per customer who has placed more than 750 orders. 
 -- Return: customer_name, aov (average order value). 
-
-
-
+SELECT 
+    --o.customer_id,
+    c.customer_name,
+    AVG(total_amount) as aov,
+    COUNT (order_id) as total_orders
+FROM orders as o
+    JOIN customers as c
+    ON c.customer_id = o.customer_id
+GROUP BY 1
+HAVING COUNT(order_id) > 750
    
-
 
 -- Q4. High-Value Customers 
 -- Question: List the customers who have spent more than 100K in total on food orders. 
 --Return: customer_name, customer_id. 
 
+SELECT 
+    --o.customer_id,
+    c.customer_name,
+    SUM(total_amount) as total_spent
+FROM orders as o
+    JOIN customers as c
+    ON c.customer_id = o.customer_id
+GROUP BY 1
+HAVING SUM(o.total_amount) > 100000
+   
 
 -- Q5. Orders Without Delivery 
 -- Question: Write a query to find orders that were placed but not delivered. 
 -- Return: restaurant_name, city, and the number of not delivered orders. 
+
+SELECT 
+    r.restaurant_name,
+    COUNT(o.order_id) as cnt_not_delivered_orders
+FROM orders as o
+LEFT JOIN
+restaurants as r
+ON r.restaurant_id = o.restaurant_id
+LEFT JOIN
+deliveries as d
+ON d.order_id = o.order_id
+WHERE d.delivery_id IS NULL
+GROUP BY 1
+ORDER BY 2 DESC
+
+SELECT *
+FROM orders as o
+LEFT JOIN
+restaurants as r
+ON r.restaurant_id = o.restaurant_id
+WHERE
+    o.order_id NOT IN (SELECT order_id FROM deliveries)
+
 
 -- Q6. Restaurant Revenue Ranking
 -- Question: Rank restaurants by their total revenue from the last year. 
