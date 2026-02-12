@@ -266,8 +266,7 @@ AS
             2) as cancel_ratio
     FROM cancel_ratio_23
 ),
-current_year_data
-(
+current_year_data AS (
     SELECT  
         restaurant_id,
         total_orders,
@@ -277,14 +276,15 @@ current_year_data
             2) as cancel_ratio
     FROM cancel_ratio_24
 )
-
 SELECT 
-    restaurant_id,
-    cancel_ratio,
-    cancel_ratio,
-FROM current_year_date
+    c.restaurant_id AS restaurant_id,
+    c.cancel_ratio AS current_year_cancel_ratio,
+    l.cancel_ratio AS last_year_cancel_ratio
+FROM current_year_data AS c
 JOIN
-last_year_date
+last_year_data AS l
+ON c.restaurant_id = l.restaurant_id
+
 
 -- Q10. Rider Average Delivery Time 
 -- Question: Determine each rider's average delivery time. 
