@@ -288,8 +288,50 @@ ON c.restaurant_id = l.restaurant_id
 -- Q10. Rider Average Delivery Time 
 -- Question: Determine each rider's average delivery time. 
 
+SELECT 
+    o.order_id,
+    o.order_time,
+    d.delivery_time,
+    d.rider_id,
+    d.delivery_time - o.order_time AS time_difference, -- time diffrence for each order id
+    --(d.delivery_time - o.order_time)::text AS time_difference, will convert json to text or readible text w/o curly braces
+    --EPOCH will provide the time difference in seconds
+    EXTRACT(EPOCH FROM (d.delivery_time - o.order_time + 
+    CASE WHEN d.delivery_time < o.order_time THEN INTERVAL ' 1 day' ELSE
+    INTERVAL '0 day' END))/60 as time_difference_in_sec
+FROM orders as o 
+JOIN deliveries as d 
+ON o.order_id = d.order_id
+WHERE d.delivery_status = 'Delivered';
+
 -- Q11. Monthly Restaurant Growth Ratio 
 -- Question:  Calculate each restaurant's growth ratio based on the total number of delivered orders since its joining. 
+
+WITH growth_ratio
+AS  
+(
+SELECT
+    o.restaurant_id,
+    TO_CHAR(o.order_date, 'mm-yy') as month,
+    COUNT(o.order_id) as cr_month_orders,
+    LAG(COUNT(o.order_id),1) OVER(PARTITION BY o.restaurant_id ORDER BY TO_CHAR(o.order_date, 'mm-yy')) as prev_month_orders
+FROM orders as o 
+JOIN
+deliveries as d 
+ON o.order_id = d.order_id
+WHERE d.delivery_status = 'Delivered'
+GROUP BY 1, 2
+ORDER BY 1, 2
+)
+SELECT  
+    restaurant_id,
+    month,
+    prev_month_orders,
+    cr_month_orders,
+    ROUND((cr_month_orders::numeric-prev_month_orders::numeric)/prev_month_orders::numeric*100
+    ,2) 
+    as growth_ration
+FROM growth_ratio
 
 -- Q12. Customer Segmentation 
 -- Question: Segment customers into 'Gold' or 'Silver' groups based on their total spending compared to the average order value (AOV). If a customer's total spending exceeds the AOV, label them as 'Gold'; otherwise, label them as 'Silver'. 
