@@ -281,8 +281,7 @@ SELECT
     c.cancel_ratio AS current_year_cancel_ratio,
     l.cancel_ratio AS last_year_cancel_ratio
 FROM current_year_data AS c
-JOIN
-last_year_data AS l
+JOIN last_year_data AS l
 ON c.restaurant_id = l.restaurant_id
 
 
