@@ -177,14 +177,114 @@ WHERE
 -- Question: Rank restaurants by their total revenue from the last year. 
 -- Return: restaurant_name, total_revenue, and their rank within their city. 
 
+WITH ranking_table
+AS(
+    SELECT
+        r.city,
+        r.restaurant_name,
+        SUM(o.total_amount) as revenue,
+        RANK() OVER(PARTITION BY r.city ORDER BY SUM(o.total_amount) DESC) as rank
+    FROM orders as o
+    JOIN
+    restaurants as r
+    ON r.restaurant_id = o.restaurant_id
+    WHERE o.order_date >= CURRENT_DATE - INTERVAL '3 years'
+    GROUP BY 1,2
+)
+SELECT
+    *
+FROM ranking_table
+WHERE rank = 1
+
 -- Q7. Most Popular Dish by City 
 -- Question: Identify the most popular dish in each city based on the number of orders. 
+
+SELECT *
+FROM
+    (SELECT 
+        r.city,
+        o.order_item as dish,
+        COUNT(order_id) as total_orders,
+        RANK() OVER(PARTITION BY r.city ORDER BY COUNT (order_id)DESC)as rank
+    FROM orders as o
+    JOIN
+    restaurants as r
+    ON r.restaurant_id = o.restaurant_id
+    GROUP BY 1,2
+    ) as t1
+    WHERE rank = 1
 
 -- Q8. Customer Churn 
 -- Question:  Find customers who haven’t placed an order in 2024 but did in 2023. 
 
+SELECT DISTINCT customer_id FROM orders
+WHERE 
+    EXTRACT(YEAR FROM order_date) = 2023
+    AND 
+    customer_id NOT IN
+                    (SELECT DISTINCT customer_id FROM orders
+                    WHERE EXTRACT(YEAR FROM order_date)= 2024)
+
 -- Q9. Cancellation Rate Comparison 
--- Question:  Calculate and compare the order cancellation rate for each restaurant between the current year and the previous year. 
+-- Question:  Calculate and compare the order cancellation rate for each restaurant between
+-- the current year and the previous year. 
+WITH cancel_ratio_23
+AS
+    (SELECT 
+        o. restaurant_id,
+        COUNT(o.order_id) as total_orders,
+        COUNT(CASE WHEN d.delivery_id IS NULL THEN 1 END) not_delivered
+    FROM orders AS o
+    LEFT  JOIN
+    deliveries AS d
+    ON o.order_id = d.order_id
+    WHERE EXTRACT(YEAR FROM order_date)= 2023
+    GROUP BY 1
+),
+cancel_ratio_24
+AS
+(SELECT 
+    o. restaurant_id,
+    COUNT(o.order_id) as total_orders,
+    COUNT(CASE WHEN d.delivery_id IS NULL THEN 1 END) not_delivered
+FROM orders AS o
+LEFT  JOIN
+deliveries AS d
+ON o.order_id = d.order_id
+WHERE EXTRACT(YEAR FROM order_date)= 2024
+GROUP BY 1
+),
+last_year_data
+AS
+(
+    SELECT  
+        restaurant_id,
+        total_orders,
+        not_delivered,
+        ROUND(
+            not_delivered::numeric/total_orders::numeric *100,
+            2) as cancel_ratio
+    FROM cancel_ratio_23
+),
+current_year_data
+(
+    SELECT  
+        restaurant_id,
+        total_orders,
+        not_delivered,
+        ROUND(
+            not_delivered::numeric/total_orders::numeric *100,
+            2) as cancel_ratio
+    FROM cancel_ratio_24
+)
+
+SELECT 
+    restaurant_id,
+    cancel_ratio,
+    cancel_ratio,
+FROM current_year_date
+JOIN
+last_year_date
 
 -- Q10. Rider Average Delivery Time 
 -- Question: Determine each rider's average delivery time. 
